@@ -20,6 +20,7 @@ gameover = False
 # 파이게임 초기화
 pygame.init()
 screen = pygame.display.set_mode(SCREEN_SIZE)
+pygame.display.set_caption("Bomb GAME! - PITCA")
 frame = pygame.time.Clock()
 pygame.key.set_repeat(1)
 
@@ -79,6 +80,11 @@ while True:
                 one[0].top = -100
                 one[1] = random.randint(5, 15)
                 score += 1
+                if (score % 20 == 0):
+                    enemy_pos = enemy_img.get_rect(left=random.randint(0, SCREEN_WIDTH - enemy_img.get_width()),
+                                                   bottom=-100 * cnt)
+                    enemy_speed = random.randint(5, 15)
+                    enemies_info.append([enemy_pos, enemy_speed])
 
     # 적 충돌 처리
     for one in enemies_info:
