@@ -32,7 +32,7 @@ enemy_img = pygame.image.load(enemy_url)
 
 # enemies = list()
 enemies = []
-for cnt in range(3):
+for cnt in range(5):
     enemy_pos = enemy_img.get_rect(left = 150 * cnt + 100, top = 100)
     enemies.append(enemy_pos)
     print(enemy_pos)
