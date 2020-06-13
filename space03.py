@@ -1,40 +1,35 @@
-# 스페이스 인베이더
-# space03.py
-# 2020-05-23
+# 스페이스 인베이더 - 02
 
-import os
 import pygame
+import os
 import random
 
+# 변수 설정
 WHITE = (255, 255, 255)
-
-# 화면 설정
 SCREEN_WIDTH = SCREEN_HEIGHT = 750
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
-WIN = pygame.display.set_mode(SCREEN_SIZE)
+
+# 창 타이틀 설정
 pygame.display.set_caption("SPACE INVADER")
+
+# 파이게임 초기화
+pygame.init()
 pygame.font.init()
-
-# 적군 이미지 불러오기
-RED_SPACE_SHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_red_small.png'))
-BLUE_SPACE_SHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_blue_small.png'))
-GREEN_SPACE_SHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png'))
-
-# 레이저 이미지 불러오기
-RED_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_red.png'))
-BLUE_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_blue.png'))
-GREEN_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_green.png'))
-YELLOW_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_yellow.png'))
-
-# 아군(player) 이미지 불러오기
-YELLOW_SPACE_SHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png'))
+WIN = pygame.display.set_mode(SCREEN_SIZE)
 
 # 배경 이미지 처리
-BG_IMG = pygame.image.load(os.path.join('assets', 'background-black.png'))
-BG_IMG = pygame.transform.scale(BG_IMG, SCREEN_SIZE)
+bg_img = pygame.image.load(os.path.join("assets", "background-black.png"))
+bg_img = pygame.transform.scale(bg_img, SCREEN_SIZE)
 
+# player 비행기
+YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_yellow.png"))
 
-# Ship 비행선 클래스 생성
+# enemy 비행기
+RED_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_red_small.png"))
+GREEN_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_green_small.png"))
+BLUE_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_blue_small.png"))
+
+# 우주선 클래스 생성
 class Ship:
     def __init__(self, x, y, health=100):
         self.x = x
@@ -42,9 +37,11 @@ class Ship:
         self.health = health
         self.ship_img = None
         self.laser_img = None
+        self.lasers = []
 
     def draw(self, window):
-        window.blit(self.ship_img, (self.x, self.y ))
+        # pygame.draw.rect(window, (255, 0, 0), (self.x, self.y, 50, 50))
+        window.blit(self.ship_img, (self.x, self.y))
 
     def get_width(self):
         return self.ship_img.get_width()
@@ -52,121 +49,82 @@ class Ship:
     def get_height(self):
         return self.ship_img.get_height()
 
-
 class Player(Ship):
     def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
         self.ship_img = YELLOW_SPACE_SHIP
-        self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
 
-
 class Enemy(Ship):
-    COLOR_MAP = {
-        'red' : (RED_SPACE_SHIP, RED_LASER),
-        'blue' : (BLUE_SPACE_SHIP, BLUE_LASER),
-        'green' : (GREEN_SPACE_SHIP, GREEN_LASER)
-    }
-    def __init__(self, x, y, color, health=100):
+    def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
-        self.ship_img, self.laser_img = self.COLOR_MAP[color]
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.ship_img = RED_SPACE_SHIP
 
     def move(self, vel):
         self.y += vel
 
+
+# 메인 함수 구현
 def main():
     run = True
     FPS = 60
-    level = 0
+    level = 1
     lives = 5
     main_font = pygame.font.SysFont("comicsans", 50)
-    lost_font = pygame.font.SysFont("comicsans", 60)
 
+    # 적군 생성
     enemies = []
     wave_length = 5
     enemy_vel = 1
 
+    # 우주선 생성
     player_vel = 5
     player = Player(300, 650)
-
-    lost_count = 0
-    lost = False
 
     clock = pygame.time.Clock()
 
     def redraw_window():
-        WIN.blit(BG_IMG, (0, 0))
+        WIN.blit(bg_img, (0, 0))
 
-        # 화면에 레벨, 생명 레이블 출력
         lives_label = main_font.render(f"Lives: {lives}", 1, WHITE)
         level_label = main_font.render(f"Level: {level}", 1, WHITE)
         WIN.blit(lives_label, (10, 10))
-        WIN.blit(level_label, (SCREEN_WIDTH-level_label.get_width()-10, 10))
+        WIN.blit(level_label, (SCREEN_WIDTH - level_label.get_width() - 10, 10))
 
-        # 아군 비행선 출력
-        player.draw(WIN)
-
-        # 적군 비행선 출력
         for enemy in enemies:
             enemy.draw(WIN)
 
-        # 게임 종료 시 레이블 출력
-        if lost:
-            lost_label = lost_font.render('YOU LOST!!!', 1, WHITE)
-            WIN.blit(lost_label,
-                     (SCREEN_WIDTH / 2 - lost_label.get_width() / 2, 350))
+        player.draw(WIN)
 
-        # 화면 업데이트
         pygame.display.update()
 
     while run:
         clock.tick(FPS)
         redraw_window()
 
-        # 기회가 없거나 체력이 없으면 3초간 대기
-        if lives < 1 or player.health < 1:
-            lost_count += 1
-            lost = True
+        if len(enemies) == 0:
+            wave_length += 5
+            for i in range(wave_length):
+                enemy = Enemy(random.randint(50, 700), random.randint(-1000, -100))
+                enemies.append(enemy)
 
-        # 게임 종료 시 3초간 게임 루틴을 멈춘 후 종료
-        if lost:
-            if lost_count > FPS * 3:
-                run = False
-            else:
-                continue
-
-        # 파이 게임 종료 처리
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
-        # 아군 비행선 키 입력 처리
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and player.x > 0:
+        if keys[pygame.K_a] and player.x - player_vel > 0:
             player.x -= player_vel
-        if keys[pygame.K_w] and player.y > 0:
-            player.y -= player_vel
-        if keys[pygame.K_s] and player.y < SCREEN_HEIGHT - player.get_height():
-            player.y += player_vel
-        if keys[pygame.K_d] and player.x < SCREEN_WIDTH - player.get_width():
+        if keys[pygame.K_d] and player.x + player_vel < SCREEN_WIDTH - player.get_width():
             player.x += player_vel
-
-        # 적군 비행선 초기화 (비행선 목록이 빈 경우만 실행)
-        if len(enemies) == 0:
-            level += 1
-            wave_length += 5
-            for i in range(wave_length):
-                enemy = Enemy(random.randint(50, SCREEN_WIDTH-100),
-                              random.randint(-1500, -100),
-                              random.choice(['red', 'blue', 'green'])) # 0은 색상 값
-                enemies.append(enemy)
+        if keys[pygame.K_w] and player.y - player_vel > 0:
+            player.y -= player_vel
+        if keys[pygame.K_s] and player.y + player_vel < SCREEN_HEIGHT - player.get_height():
+            player.y += player_vel
 
         for enemy in enemies:
             enemy.move(enemy_vel)
             if enemy.y > SCREEN_HEIGHT:
-                lives -= 1
                 enemies.remove(enemy)
-
 
 main()
