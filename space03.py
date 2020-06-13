@@ -56,9 +56,15 @@ class Player(Ship):
         self.max_health = health
 
 class Enemy(Ship):
-    def __init__(self, x, y, health=100):
+    COLOR_MAP = {
+        "red": RED_SPACE_SHIP,
+        "green": GREEN_SPACE_SHIP,
+        "blue": BLUE_SPACE_SHIP
+    }
+
+    def __init__(self, x, y, color, health=100):
         super().__init__(x, y, health)
-        self.ship_img = RED_SPACE_SHIP
+        self.ship_img = self.COLOR_MAP[color]
 
     def move(self, vel):
         self.y += vel
@@ -105,7 +111,9 @@ def main():
         if len(enemies) == 0:
             wave_length += 5
             for i in range(wave_length):
-                enemy = Enemy(random.randint(50, 700), random.randint(-1000, -100))
+                enemy = Enemy(random.randint(50, 700),
+                              random.randint(-1000, -100),
+                              random.choice(["red", "green", "blue"]))
                 enemies.append(enemy)
 
         for event in pygame.event.get():
