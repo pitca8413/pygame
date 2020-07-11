@@ -38,6 +38,5 @@ while True:
     # 화면 업데이트
     pygame.display.update()
 
-
 # 게임 종료
 pygame.quit()
